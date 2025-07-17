@@ -2,6 +2,7 @@
 import React from 'react';
 import { Order, orderStatusLabels, orderStatusColors } from '../../../types/order';
 import { updateOrderStatus } from '../../../services/firebase/firestore';
+import { useNotifications } from '../../../hooks/useNotifications';
 import Button from '../../common/Button';
 import {
   OrdersContainer,
@@ -25,12 +26,19 @@ interface OrdersListProps {
 }
 
 export const OrdersList: React.FC<OrdersListProps> = ({ orders, isLoading = false }) => {
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+  const { notifications } = useNotifications();
+
+  const handleStatusUpdate = async (orderId: string, newStatus: string, orderNumber: string) => {
     try {
       await updateOrderStatus(orderId, newStatus);
+      
+      // Notificar sobre a mudança de status
+      await notifications.statusUpdate(orderNumber, newStatus);
+      
       console.log('✅ Status atualizado:', newStatus);
     } catch (error) {
       console.error('❌ Erro ao atualizar status:', error);
+      notifications.error(`Erro ao atualizar pedido #${orderNumber}`);
     }
   };
 
@@ -42,16 +50,16 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, isLoading = fals
             <Button 
               size="sm" 
               variant="success"
-              onClick={() => handleStatusUpdate(order.id, 'confirmed')}
+              onClick={() => handleStatusUpdate(order.id, 'confirmed', order.orderNumber)}
             >
-              Aceitar
+              ✅ Aceitar
             </Button>
             <Button 
               size="sm" 
               variant="error"
-              onClick={() => handleStatusUpdate(order.id, 'canceled')}
+              onClick={() => handleStatusUpdate(order.id, 'canceled', order.orderNumber)}
             >
-              Recusar
+              ❌ Recusar
             </Button>
           </>
         );
@@ -60,9 +68,9 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, isLoading = fals
           <Button 
             size="sm" 
             variant="warning"
-            onClick={() => handleStatusUpdate(order.id, 'preparing')}
+            onClick={() => handleStatusUpdate(order.id, 'preparing', order.orderNumber)}
           >
-            Iniciar Preparo
+            👨‍🍳 Iniciar Preparo
           </Button>
         );
       case 'preparing':
@@ -70,9 +78,9 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, isLoading = fals
           <Button 
             size="sm" 
             variant="primary"
-            onClick={() => handleStatusUpdate(order.id, 'ready')}
+            onClick={() => handleStatusUpdate(order.id, 'ready', order.orderNumber)}
           >
-            Marcar Pronto
+            🍕 Marcar Pronto
           </Button>
         );
       case 'ready':
@@ -80,9 +88,9 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, isLoading = fals
           <Button 
             size="sm" 
             variant="success"
-            onClick={() => handleStatusUpdate(order.id, 'out_for_delivery')}
+            onClick={() => handleStatusUpdate(order.id, 'out_for_delivery', order.orderNumber)}
           >
-            Saiu p/ Entrega
+            🚚 Saiu p/ Entrega
           </Button>
         );
       case 'out_for_delivery':
@@ -90,9 +98,9 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, isLoading = fals
           <Button 
             size="sm" 
             variant="success"
-            onClick={() => handleStatusUpdate(order.id, 'delivered')}
+            onClick={() => handleStatusUpdate(order.id, 'delivered', order.orderNumber)}
           >
-            Marcar Entregue
+            ✅ Marcar Entregue
           </Button>
         );
       default:
@@ -121,7 +129,7 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, isLoading = fals
           <OrdersTitle>📋 Pedidos de Hoje</OrdersTitle>
         </OrdersHeader>
         <div style={{ padding: '20px', textAlign: 'center' }}>
-          Carregando pedidos...
+          🔄 Carregando pedidos...
         </div>
       </OrdersContainer>
     );
@@ -138,6 +146,9 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, isLoading = fals
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>📭</div>
           <h3>Nenhum pedido hoje</h3>
           <p>Os pedidos aparecerão aqui em tempo real</p>
+          <p style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '8px' }}>
+            💡 Clique em "+ Dados Demo" para criar pedidos de exemplo
+          </p>
         </EmptyState>
       ) : (
         <div>
@@ -158,7 +169,16 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, isLoading = fals
               <OrderCustomer>
                 <strong>{order.customerInfo.name}</strong>
                 <span>{order.customerInfo.phone}</span>
-                {order.deliveryMethod === 'delivery' ? '🚚 Entrega' : '🏪 Retirada'}
+                <span style={{ 
+                  background: order.deliveryMethod === 'delivery' ? '#3182CE20' : '#D69E2E20',
+                  color: order.deliveryMethod === 'delivery' ? '#3182CE' : '#D69E2E',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  fontWeight: '600'
+                }}>
+                  {order.deliveryMethod === 'delivery' ? '🚚 Entrega' : '🏪 Retirada'}
+                </span>
               </OrderCustomer>
 
               <OrderItems>
@@ -172,7 +192,7 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, isLoading = fals
 
               <OrderTotal>
                 <strong>Total: {formatCurrency(order.total)}</strong>
-                <span>
+                <span style={{ fontSize: '20px' }}>
                   {order.paymentMethod === 'card' && '💳'}
                   {order.paymentMethod === 'pix' && '📱'}
                   {order.paymentMethod === 'cash' && '💵'}

@@ -1,10 +1,13 @@
 ﻿// src/pages/Dashboard/index.tsx
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useDashboard } from '../../hooks/useDashboard';
+import { useNotifications } from '../../hooks/useNotifications';
 import Button from '../../components/common/Button';
 import StatCard from '../../components/Dashboard/StatCard';
 import OrdersList from '../../components/Dashboard/OrdersList';
+import NotificationSettings from '../../components/common/NotificationSettings';
 import styled from 'styled-components';
 
 const DashboardContainer = styled.div`
@@ -54,47 +57,41 @@ const StatsGrid = styled.div`
 
 const ContentGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 400px;
   gap: 24px;
   
-  @media (max-width: 1024px) {
+  @media (max-width: 1200px) {
     grid-template-columns: 1fr;
   }
 `;
 
-const InfoCard = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  
-  h3 {
-    color: #1a202c;
-    margin-bottom: 16px;
-    font-size: 18px;
-    font-weight: 600;
-  }
-  
-  ul {
-    margin: 0;
-    padding-left: 20px;
-    color: #4a5568;
-    
-    li {
-      margin-bottom: 8px;
-    }
-  }
+const NotificationIndicator = styled.div<{ hasPermission: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: ${({ hasPermission }) => hasPermission ? '#C6F6D5' : '#FED7D7'};
+  color: ${({ hasPermission }) => hasPermission ? '#22543D' : '#822727'};
+  font-size: 12px;
+  font-weight: 600;
 `;
 
 const Dashboard: React.FC = () => {
   const { user, signOut } = useAuthContext();
   const { stats, orders, isLoading, refreshData, createNewSampleData } = useDashboard();
+  const { hasPermission, notifications } = useNotifications();
+  
+  // Ref para controlar pedidos anteriores
+  const previousOrdersRef = useRef<string[]>([]);
 
   const handleLogout = async () => {
     try {
       await signOut();
+      notifications.success('Logout realizado com sucesso!');
     } catch (error) {
       console.error('Erro no logout:', error);
+      notifications.error('Erro ao fazer logout');
     }
   };
 
@@ -105,109 +102,230 @@ const Dashboard: React.FC = () => {
     });
   };
 
+  // Detectar novos pedidos e enviar notificações
+  useEffect(() => {
+    if (!isLoading && orders.length > 0) {
+      const currentOrderIds = orders.map(order => order.id);
+      const previousOrderIds = previousOrdersRef.current;
+      
+      // Encontrar novos pedidos
+      const newOrders = orders.filter(order => 
+        !previousOrderIds.includes(order.id) && 
+        order.status === 'pending'
+      );
+      
+      // Notificar sobre novos pedidos
+      newOrders.forEach(order => {
+        notifications.newOrder(order.orderNumber, order.customerInfo.name);
+      });
+      
+      // Atualizar ref
+      previousOrdersRef.current = currentOrderIds;
+    }
+  }, [orders, isLoading, notifications]);
+
+  // Função para criar dados demo com notificação
+  const handleCreateSampleData = async () => {
+    try {
+      await createNewSampleData();
+      notifications.success('Dados de demonstração criados!');
+    } catch (error) {
+      notifications.error('Erro ao criar dados de demonstração');
+    }
+  };
+
+  // Função para atualizar dados com notificação
+  const handleRefreshData = async () => {
+    try {
+      await refreshData();
+      notifications.success('Dados atualizados!');
+    } catch (error) {
+      notifications.error('Erro ao atualizar dados');
+    }
+  };
+
   return (
-    <DashboardContainer>
-      <Header>
-        <WelcomeText>
-          <h1>🍕 Dashboard - Sistema Pizzaria</h1>
-          <p>Bem-vindo, <strong>{user?.name}</strong>! ({user?.role})</p>
-        </WelcomeText>
-        <HeaderActions>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={refreshData}
+    <>
+      <DashboardContainer>
+        <Header>
+          <WelcomeText>
+            <h1>🍕 Dashboard - Sistema Pizzaria</h1>
+            <p>
+              Bem-vindo, <strong>{user?.name}</strong>! ({user?.role})
+              <NotificationIndicator hasPermission={hasPermission}>
+                {hasPermission ? '🔔 Notificações ON' : '🔕 Notificações OFF'}
+              </NotificationIndicator>
+            </p>
+          </WelcomeText>
+          <HeaderActions>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleRefreshData}
+              isLoading={isLoading}
+            >
+              Atualizar
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={handleCreateSampleData}
+            >
+              + Dados Demo
+            </Button>
+            <Button 
+              variant="warning" 
+              size="sm"
+              onClick={() => notifications.clear()}
+            >
+              Limpar Notificações
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              Sair
+            </Button>
+          </HeaderActions>
+        </Header>
+
+        {/* Estatísticas */}
+        <StatsGrid>
+          <StatCard
+            title="Pedidos Hoje"
+            value={stats.todayOrders}
+            icon="📋"
+            color="#4299e1"
             isLoading={isLoading}
-          >
-            Atualizar
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={createNewSampleData}
-          >
-            + Dados Demo
-          </Button>
-          <Button variant="outline" onClick={handleLogout}>
-            Sair
-          </Button>
-        </HeaderActions>
-      </Header>
+          />
+          <StatCard
+            title="Pedidos Pendentes"
+            value={stats.pendingOrders}
+            icon="⏳"
+            color="#ed8936"
+            isLoading={isLoading}
+          />
+          <StatCard
+            title="Faturamento Hoje"
+            value={formatCurrency(stats.todayRevenue)}
+            icon="💰"
+            color="#48bb78"
+            isLoading={isLoading}
+          />
+          <StatCard
+            title="Ticket Médio"
+            value={formatCurrency(stats.averageOrderValue)}
+            icon="📊"
+            color="#9f7aea"
+            isLoading={isLoading}
+          />
+        </StatsGrid>
 
-      {/* Estatísticas */}
-      <StatsGrid>
-        <StatCard
-          title="Pedidos Hoje"
-          value={stats.todayOrders}
-          icon="📋"
-          color="#4299e1"
-          isLoading={isLoading}
-        />
-        <StatCard
-          title="Pedidos Pendentes"
-          value={stats.pendingOrders}
-          icon="⏳"
-          color="#ed8936"
-          isLoading={isLoading}
-        />
-        <StatCard
-          title="Faturamento Hoje"
-          value={formatCurrency(stats.todayRevenue)}
-          icon="💰"
-          color="#48bb78"
-          isLoading={isLoading}
-        />
-        <StatCard
-          title="Ticket Médio"
-          value={formatCurrency(stats.averageOrderValue)}
-          icon="📊"
-          color="#9f7aea"
-          isLoading={isLoading}
-        />
-      </StatsGrid>
+        {/* Conteúdo Principal */}
+        <ContentGrid>
+          {/* Lista de Pedidos */}
+          <OrdersList orders={orders} isLoading={isLoading} />
 
-      {/* Conteúdo Principal */}
-      <ContentGrid>
-        {/* Lista de Pedidos */}
-        <OrdersList orders={orders} isLoading={isLoading} />
+          {/* Configurações de Notificação */}
+          <div>
+            <NotificationSettings />
+            
+            <div style={{ 
+              background: 'white', 
+              borderRadius: '12px', 
+              padding: '24px', 
+              marginTop: '20px',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)' 
+            }}>
+              <h3 style={{ color: '#1a202c', marginBottom: '16px' }}>🔥 Sistema de Notificações</h3>
+              <ul style={{ margin: 0, paddingLeft: '20px', color: '#4a5568' }}>
+                <li>✅ Notificações visuais (toasts)</li>
+                <li>✅ Notificações sonoras</li>
+                <li>✅ Notificações do navegador</li>
+                <li>✅ Novos pedidos em tempo real</li>
+                <li>✅ Status atualizados automaticamente</li>
+                <li>✅ Configurações personalizáveis</li>
+                <li>✅ Teste de sons</li>
+              </ul>
+            </div>
 
-        {/* Informações do Sistema */}
-        <div>
-          <InfoCard>
-            <h3>🔥 Firebase em Tempo Real</h3>
-            <ul>
-              <li>✅ Autenticação funcionando</li>
-              <li>✅ Firestore conectado</li>
-              <li>✅ Dados em tempo real</li>
-              <li>✅ Pedidos sincronizados</li>
-              <li>✅ Estatísticas atualizadas</li>
-            </ul>
-          </InfoCard>
+            <div style={{ 
+              background: 'white', 
+              borderRadius: '12px', 
+              padding: '24px', 
+              marginTop: '20px',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)' 
+            }}>
+              <h3 style={{ color: '#1a202c', marginBottom: '16px' }}>🎯 Teste as Funcionalidades</h3>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <Button 
+                  size="sm" 
+                  variant="success"
+                  onClick={() => notifications.success('Teste de sucesso!')}
+                >
+                  ✅ Sucesso
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="error"
+                  onClick={() => notifications.error('Teste de erro!')}
+                >
+                  ❌ Erro
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="warning"
+                  onClick={() => notifications.warning('Teste de aviso!')}
+                >
+                  ⚠️ Aviso
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="primary"
+                  onClick={() => notifications.info('Teste de informação!')}
+                >
+                  ℹ️ Info
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost"
+                  onClick={() => notifications.newOrder('999', 'Cliente Teste')}
+                >
+                  🍕 Novo Pedido
+                </Button>
+              </div>
+            </div>
 
-          <InfoCard style={{ marginTop: '20px' }}>
-            <h3>📊 Dashboard Completo</h3>
-            <ul>
-              <li>📈 Estatísticas em tempo real</li>
-              <li>📋 Lista de pedidos atualizada</li>
-              <li>🔄 Atualização de status</li>
-              <li>💳 Informações de pagamento</li>
-              <li>🚚 Controle de entrega</li>
-            </ul>
-          </InfoCard>
+            <div style={{ 
+              background: 'white', 
+              borderRadius: '12px', 
+              padding: '24px', 
+              marginTop: '20px',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)' 
+            }}>
+              <h3 style={{ color: '#1a202c', marginBottom: '16px' }}>🚀 Próximas Funcionalidades</h3>
+              <ul style={{ margin: 0, paddingLeft: '20px', color: '#4a5568' }}>
+                <li>📊 Gráficos interativos com Recharts</li>
+                <li>🛒 Sistema completo de produtos</li>
+                <li>📈 Relatórios avançados em PDF</li>
+                <li>⚙️ Configurações da pizzaria</li>
+                <li>🧭 Navegação lateral completa</li>
+              </ul>
+            </div>
+          </div>
+        </ContentGrid>
+      </DashboardContainer>
 
-          <InfoCard style={{ marginTop: '20px' }}>
-            <h3>🎯 Próximas Funcionalidades</h3>
-            <ul>
-              <li>📊 Gráficos interativos</li>
-              <li>🔔 Notificações sonoras</li>
-              <li>🛒 Sistema de produtos</li>
-              <li>📈 Relatórios avançados</li>
-              <li>⚙️ Configurações completas</li>
-            </ul>
-          </InfoCard>
-        </div>
-      </ContentGrid>
-    </DashboardContainer>
+      {/* Sistema de Toasts */}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        }}
+      />
+    </>
   );
 };
 
