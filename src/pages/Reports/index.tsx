@@ -70,7 +70,7 @@ export const Reports: React.FC = () => {
   const [metrics, setMetrics] = useState<ReportsMetrics | null>(null);
   const [dailySalesData, setDailySalesData] = useState<DailySales[]>([]);
   const [productSalesData, setProductSalesData] = useState<ProductSales[]>([]);
-  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [topProducts, setTopProducts] = useState<ProductSales[]>([]);
   const { notifications } = useNotifications();
 
   // Dados mock para demonstração - CORRIGIDOS
@@ -128,7 +128,7 @@ export const Reports: React.FC = () => {
     };
 
     loadReportsData();
-  }, [notifications]); // Removido selectedPeriod da dependência para evitar loop
+  }, [notifications]);
 
   const handlePeriodChange = (period: string) => {
     setSelectedPeriod(period);
@@ -218,145 +218,269 @@ export const Reports: React.FC = () => {
   }
 
   return (
-    <>
-      <ReportsContainer>
-        <ReportsHeader>
-          <div>
-            <ReportsTitle>📊 Relatórios e Analytics</ReportsTitle>
-            <p style={{ color: '#718096', margin: 0 }}>
-              Análise completa do desempenho da sua pizzaria
-            </p>
+    <ReportsContainer>
+      <ReportsHeader>
+        <div>
+          <ReportsTitle>📊 Relatórios e Analytics</ReportsTitle>
+          <p style={{ color: '#718096', margin: 0 }}>
+            Análise completa do desempenho da sua pizzaria
+          </p>
+        </div>
+        <ReportsActions>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()}
+          >
+            🔄 Atualizar
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={handleGeneratePDF}
+          >
+            📄 Exportar PDF
+          </Button>
+        </ReportsActions>
+      </ReportsHeader>
+
+      {/* Filtros */}
+      <FilterContainer>
+        <FilterGroup>
+          <label>Período</label>
+          <select
+            value={selectedPeriod}
+            onChange={(e) => handlePeriodChange(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid #e2e8f0',
+              borderRadius: '6px',
+              background: 'white',
+              minWidth: '150px'
+            }}
+          >
+            <option value="today">Hoje</option>
+            <option value="yesterday">Ontem</option>
+            <option value="last7days">Últimos 7 dias</option>
+            <option value="last30days">Últimos 30 dias</option>
+            <option value="thisMonth">Este mês</option>
+            <option value="lastMonth">Mês passado</option>
+            <option value="custom">Período customizado</option>
+          </select>
+        </FilterGroup>
+
+        {selectedPeriod === 'custom' && (
+          <>
+            <FilterGroup>
+              <label>Data início</label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                size="sm"
+              />
+            </FilterGroup>
+            <FilterGroup>
+              <label>Data fim</label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                size="sm"
+              />
+            </FilterGroup>
+            <FilterGroup>
+              <Button 
+                size="sm" 
+                variant="primary"
+                onClick={handleCustomDateFilter}
+                style={{ marginTop: '20px' }}
+              >
+                Aplicar Filtro
+              </Button>
+            </FilterGroup>
+          </>
+        )}
+      </FilterContainer>
+
+      {/* Métricas Principais */}
+      <MetricsGrid>
+        <MetricCard>
+          <div className="icon">💰</div>
+          <div className="content">
+            <h3>Faturamento Total</h3>
+            <span className="value">{formatCurrency(metrics.totalRevenue)}</span>
+            <span className="growth positive">↗ {metrics.growth.toFixed(1)}%</span>
           </div>
-          <ReportsActions>
-            <Button 
-              variant="outline" 
-              onClick={() => window.location.reload()}
-            >
-              🔄 Atualizar
-            </Button>
-            <Button 
-              variant="primary" 
-              onClick={handleGeneratePDF}
-            >
-              📄 Exportar PDF
-            </Button>
-          </ReportsActions>
-        </ReportsHeader>
+        </MetricCard>
+        
+        <MetricCard>
+          <div className="icon">📋</div>
+          <div className="content">
+            <h3>Total de Pedidos</h3>
+            <span className="value">{metrics.totalOrders}</span>
+            <span className="growth positive">↗ 12.5%</span>
+          </div>
+        </MetricCard>
+        
+        <MetricCard>
+          <div className="icon">🎯</div>
+          <div className="content">
+            <h3>Ticket Médio</h3>
+            <span className="value">{formatCurrency(metrics.averageTicket)}</span>
+            <span className="growth neutral">→ 2.1%</span>
+          </div>
+        </MetricCard>
+        
+        <MetricCard>
+          <div className="icon">🏆</div>
+          <div className="content">
+            <h3>Produto Top</h3>
+            <span className="value">{metrics.topProduct}</span>
+            <span className="growth positive">🔥 Tendência</span>
+          </div>
+        </MetricCard>
+      </MetricsGrid>
 
-        {/* Filtros */}
-        <FilterContainer>
-          <FilterGroup>
-            <label>Período</label>
-            <select
-              value={selectedPeriod}
-              onChange={(e) => handlePeriodChange(e.target.value)}
-              style={{
-                padding: '8px 12px',
-                border: '1px solid #e2e8f0',
-                borderRadius: '6px',
-                background: 'white',
-                minWidth: '150px'
-              }}
-            >
-              <option value="today">Hoje</option>
-              <option value="yesterday">Ontem</option>
-              <option value="last7days">Últimos 7 dias</option>
-              <option value="last30days">Últimos 30 dias</option>
-              <option value="thisMonth">Este mês</option>
-              <option value="lastMonth">Mês passado</option>
-              <option value="custom">Período customizado</option>
-            </select>
-          </FilterGroup>
-
-          {selectedPeriod === 'custom' && (
-            <>
-              <FilterGroup>
-                <label>Data início</label>
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  size="sm"
+      {/* Gráficos */}
+      <ChartsContainer>
+        {/* Gráfico de Vendas Diárias */}
+        <ChartSection>
+          <ChartTitle>📈 Vendas por Dia</ChartTitle>
+          <ChartWrapper>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={dailySalesData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#718096"
                 />
-              </FilterGroup>
-              <FilterGroup>
-                <label>Data fim</label>
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  size="sm"
+                <YAxis stroke="#718096" />
+                <Tooltip 
+                  formatter={(value: any, name: string) => [
+                    name === 'sales' ? formatCurrency(Number(value)) : value,
+                    name === 'sales' ? 'Vendas' : name === 'orders' ? 'Pedidos' : 'Ticket Médio'
+                  ]}
+                  labelFormatter={(date) => `Data: ${date}`}
                 />
-              </FilterGroup>
-              <FilterGroup>
-                <Button 
-                  size="sm" 
-                  variant="primary"
-                  onClick={handleCustomDateFilter}
-                  style={{ marginTop: '20px' }}
-                >
-                  Aplicar Filtro
-                </Button>
-              </FilterGroup>
-            </>
-          )}
-        </FilterContainer>
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="sales" 
+                  stroke="#FF6B35" 
+                  strokeWidth={3}
+                  name="Vendas"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="orders" 
+                  stroke="#4299E1" 
+                  strokeWidth={2}
+                  name="Pedidos"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartWrapper>
+        </ChartSection>
 
-        {/* Métricas Principais */}
-        <MetricsGrid>
-          <MetricCard>
-            <div className="icon">💰</div>
-            <div className="content">
-              <h3>Faturamento Total</h3>
-              <span className="value">{formatCurrency(metrics.totalRevenue)}</span>
-              <span className="growth positive">↗ {metrics.growth.toFixed(1)}%</span>
-            </div>
-          </MetricCard>
-          
-          <MetricCard>
-            <div className="icon">📋</div>
-            <div className="content">
-              <h3>Total de Pedidos</h3>
-              <span className="value">{metrics.totalOrders}</span>
-              <span className="growth positive">↗ 12.5%</span>
-            </div>
-          </MetricCard>
-          
-          <MetricCard>
-            <div className="icon">🎯</div>
-            <div className="content">
-              <h3>Ticket Médio</h3>
-              <span className="value">{formatCurrency(metrics.averageTicket)}</span>
-              <span className="growth neutral">→ 2.1%</span>
-            </div>
-          </MetricCard>
-          
-          <MetricCard>
-            <div className="icon">🏆</div>
-            <div className="content">
-              <h3>Produto Top</h3>
-              <span className="value">{metrics.topProduct}</span>
-              <span className="growth positive">🔥 Tendência</span>
-            </div>
-          </MetricCard>
-        </MetricsGrid>
+        {/* Gráfico de Produtos Mais Vendidos */}
+        <ChartSection>
+          <ChartTitle>🍕 Produtos Mais Vendidos</ChartTitle>
+          <ChartWrapper>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={productSalesData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#718096"
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis stroke="#718096" />
+                <Tooltip 
+                  formatter={(value: any, name: string) => [
+                    name === 'revenue' ? formatCurrency(Number(value)) : value,
+                    name === 'revenue' ? 'Faturamento' : 'Quantidade'
+                  ]}
+                />
+                <Legend />
+                <Bar dataKey="quantity" fill="#48BB78" name="Quantidade" />
+                <Bar dataKey="revenue" fill="#FF6B35" name="Faturamento" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartWrapper>
+        </ChartSection>
+      </ChartsContainer>
 
-        {/* Gráficos */}
-        <ChartsContainer>
-          {/* Gráfico de Vendas Diárias */}
-          <ChartSection>
-            <ChartTitle>📈 Vendas por Dia</ChartTitle>
-            <ChartWrapper>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={dailySalesData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="#718096"
-                  />
-                  <YAxis stroke="#718096" />
-                  <Tooltip 
-                    formatter={(value: any, name: string) => [
+      {/* Gráfico Pizza */}
+      <ChartSection>
+        <ChartTitle>🥧 Distribuição de Vendas por Produto</ChartTitle>
+        <ChartWrapper style={{ height: '400px' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={productSalesData}
+                cx="50%"
+                cy="50%"
+                outerRadius={120}
+                fill="#8884d8"
+                dataKey="revenue"
+                label={(entry) => `${entry.name}: ${formatCurrency(entry.revenue)}`}
+              >
+                {productSalesData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value: any) => [formatCurrency(Number(value)), 'Faturamento']}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartWrapper>
+      </ChartSection>
+
+      {/* Tabela de Top Produtos */}
+      <TableSection>
+        <ChartTitle>🏆 Top 5 Produtos</ChartTitle>
+        <Table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Quantidade</th>
+              <th>Faturamento</th>
+              <th>Ticket Médio</th>
+            </tr>
+          </thead>
+          <tbody>
+            {topProducts.map((product, index) => (
+              <tr key={index}>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div 
+                      style={{ 
+                        width: '12px', 
+                        height: '12px', 
+                        borderRadius: '50%', 
+                        backgroundColor: product.color 
+                      }} 
+                    />
+                    {product.name}
+                  </div>
+                </td>
+                <td>{product.quantity}</td>
+                <td>{formatCurrency(product.revenue)}</td>
+                <td>{formatCurrency(product.revenue / product.quantity)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </TableSection>
+
+      <Toaster position="top-right" />
+    </ReportsContainer>
+  );
+};
+
+export default Reports; [
                       name === 'sales' ? formatCurrency(Number(value)) : value,
                       name === 'sales' ? 'Vendas' : name === 'orders' ? 'Pedidos' : 'Ticket Médio'
                     ]}
@@ -399,6 +523,11 @@ export const Reports: React.FC = () => {
                   <YAxis stroke="#718096" />
                   <Tooltip 
                     formatter={(value: any, name: string) => [
+                      name === 'sales' ? formatCurrency(Number(value)) : value,
+                      name === 'sales' ? 'Vendas' : name === 'orders' ? 'Pedidos' : 'Ticket Médio'
+                    ]}
+                    labelFormatter={(date) => `Data: ${date}`}
+                  /> [
                       name === 'revenue' ? formatCurrency(Number(value)) : value,
                       name === 'revenue' ? 'Faturamento' : 'Quantidade'
                     ]}
@@ -433,6 +562,130 @@ export const Reports: React.FC = () => {
                 </Pie>
                 <Tooltip 
                   formatter={(value: any) => [formatCurrency(Number(value)), 'Faturamento']}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartWrapper>
+        </ChartSection>
+
+        {/* Tabela de Top Produtos */}
+        <TableSection>
+          <ChartTitle>🏆 Top 5 Produtos</ChartTitle>
+          <Table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Faturamento</th>
+                <th>Ticket Médio</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topProducts.map((product, index) => (
+                <tr key={index}>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div 
+                        style={{ 
+                          width: '12px', 
+                          height: '12px', 
+                          borderRadius: '50%', 
+                          backgroundColor: product.color 
+                        }} 
+                      />
+                      {product.name}
+                    </div>
+                  </td>
+                  <td>{product.quantity}</td>
+                  <td>{formatCurrency(product.revenue)}</td>
+                  <td>{formatCurrency(product.revenue / product.quantity)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </TableSection>
+      </ReportsContainer>
+
+      <Toaster position="top-right" />
+    </>
+  );
+};
+
+export default Reports;' : 'Ticket Médio'
+                    ]}
+                    labelFormatter={(date) => `Data: ${formatDate(date)}`}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="sales" 
+                    stroke="#FF6B35" 
+                    strokeWidth={3}
+                    name="Vendas"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="orders" 
+                    stroke="#4299E1" 
+                    strokeWidth={2}
+                    name="Pedidos"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartWrapper>
+          </ChartSection>
+
+          {/* Gráfico de Produtos Mais Vendidos */}
+          <ChartSection>
+            <ChartTitle>🍕 Produtos Mais Vendidos</ChartTitle>
+            <ChartWrapper>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={productSalesData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#718096"
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis stroke="#718096" />
+                  <Tooltip 
+                    formatter={(value: any, name: string) => [
+                      name === 'revenue' ? formatCurrency(value) : value,
+                      name === 'revenue' ? 'Faturamento' : 'Quantidade'
+                    ]}
+                  />
+                  <Legend />
+                  <Bar dataKey="quantity" fill="#48BB78" name="Quantidade" />
+                  <Bar dataKey="revenue" fill="#FF6B35" name="Faturamento" />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartWrapper>
+          </ChartSection>
+        </ChartsContainer>
+
+        {/* Gráfico Pizza */}
+        <ChartSection>
+          <ChartTitle>🥧 Distribuição de Vendas por Produto</ChartTitle>
+          <ChartWrapper style={{ height: '400px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={productSalesData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={120}
+                  fill="#8884d8"
+                  dataKey="revenue"
+                  label={(entry) => `${entry.name}: ${formatCurrency(entry.revenue)}`}
+                >
+                  {productSalesData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value: any) => [formatCurrency(value), 'Faturamento']}
                 />
               </PieChart>
             </ResponsiveContainer>
