@@ -1,21 +1,26 @@
-﻿// src/App.tsx
+﻿// src/App.tsx - COM SISTEMA DE TEMA
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext'; // NOVO
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Header from './components/common/Header';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 import { useAuthContext } from './contexts/AuthContext';
+
+// Importar estilos de tema
+import './styles/themes.css'; // NOVO
 
 // Layout wrapper para páginas autenticadas
 const AuthenticatedLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, signOut } = useAuthContext();
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f7fafc' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-secondary)' }}>
       <Header 
         userName={user?.name}
         userRole={user?.role}
@@ -74,10 +79,7 @@ function AppContent() {
         <Route path="/settings" element={
           <ProtectedRoute requiredRole="admin">
             <AuthenticatedLayout>
-              <div style={{ padding: '20px' }}>
-                <h2>⚙️ Configurações</h2>
-                <p>Página apenas para administradores - Em breve!</p>
-              </div>
+              <Settings />
             </AuthenticatedLayout>
           </ProtectedRoute>
         } />
@@ -96,7 +98,9 @@ function AppContent() {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
+            background: 'var(--bg-secondary)',
+            color: 'var(--text-primary)'
           }}>
             <h2>404 - Página não encontrada</h2>
             <p>A página que você procura não existe.</p>
@@ -104,7 +108,7 @@ function AppContent() {
               onClick={() => window.history.back()}
               style={{
                 padding: '8px 16px',
-                background: '#ff6b35',
+                background: 'var(--color-primary)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '6px',
@@ -123,9 +127,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider> {/* NOVO PROVIDER */}
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

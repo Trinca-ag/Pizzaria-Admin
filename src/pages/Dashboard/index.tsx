@@ -1,4 +1,4 @@
-﻿// src/pages/Dashboard/index.tsx
+﻿// src/pages/Dashboard/index.tsx - SEM CONFIGURAÇÕES DE NOTIFICAÇÃO
 import React, { useEffect, useRef } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useAuthContext } from '../../contexts/AuthContext';
@@ -7,7 +7,6 @@ import { useNotifications } from '../../hooks/useNotifications';
 import Button from '../../components/common/Button';
 import StatCard from '../../components/Dashboard/StatCard';
 import OrdersList from '../../components/Dashboard/OrdersList';
-import NotificationSettings from '../../components/common/NotificationSettings';
 import styled from 'styled-components';
 
 const DashboardContainer = styled.div`
@@ -75,6 +74,38 @@ const NotificationIndicator = styled.div<{ hasPermission: boolean }>`
   color: ${({ hasPermission }) => hasPermission ? '#22543D' : '#822727'};
   font-size: 12px;
   font-weight: 600;
+`;
+
+const InfoCard = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+
+  h3 {
+    color: #1a202c;
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #4a5568;
+
+    li {
+      margin-bottom: 8px;
+    }
+  }
+`;
+
+const TestButtonsGroup = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
 `;
 
 const Dashboard: React.FC = () => {
@@ -223,38 +254,30 @@ const Dashboard: React.FC = () => {
           {/* Lista de Pedidos */}
           <OrdersList orders={orders} isLoading={isLoading} />
 
-          {/* Configurações de Notificação */}
+          {/* Informações e Testes do Sistema */}
           <div>
-            <NotificationSettings />
-            
-            <div style={{ 
-              background: 'white', 
-              borderRadius: '12px', 
-              padding: '24px', 
-              marginTop: '20px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)' 
-            }}>
-              <h3 style={{ color: '#1a202c', marginBottom: '16px' }}>🔥 Sistema de Notificações</h3>
-              <ul style={{ margin: 0, paddingLeft: '20px', color: '#4a5568' }}>
+            <InfoCard>
+              <h3>🔥 Sistema de Notificações</h3>
+              <ul>
                 <li>✅ Notificações visuais (toasts)</li>
                 <li>✅ Notificações sonoras</li>
                 <li>✅ Notificações do navegador</li>
                 <li>✅ Novos pedidos em tempo real</li>
                 <li>✅ Status atualizados automaticamente</li>
-                <li>✅ Configurações personalizáveis</li>
-                <li>✅ Teste de sons</li>
               </ul>
-            </div>
+              <p style={{ 
+                margin: '12px 0 0', 
+                fontSize: '13px', 
+                color: '#718096',
+                fontStyle: 'italic' 
+              }}>
+                💡 Configure as notificações em <strong>Configurações → Notificações</strong>
+              </p>
+            </InfoCard>
 
-            <div style={{ 
-              background: 'white', 
-              borderRadius: '12px', 
-              padding: '24px', 
-              marginTop: '20px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)' 
-            }}>
-              <h3 style={{ color: '#1a202c', marginBottom: '16px' }}>🎯 Teste as Funcionalidades</h3>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <InfoCard>
+              <h3>🎯 Teste as Funcionalidades</h3>
+              <TestButtonsGroup>
                 <Button 
                   size="sm" 
                   variant="success"
@@ -290,25 +313,32 @@ const Dashboard: React.FC = () => {
                 >
                   🍕 Novo Pedido
                 </Button>
-              </div>
-            </div>
+              </TestButtonsGroup>
+            </InfoCard>
 
-            <div style={{ 
-              background: 'white', 
-              borderRadius: '12px', 
-              padding: '24px', 
-              marginTop: '20px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)' 
-            }}>
-              <h3 style={{ color: '#1a202c', marginBottom: '16px' }}>🚀 Próximas Funcionalidades</h3>
-              <ul style={{ margin: 0, paddingLeft: '20px', color: '#4a5568' }}>
+            <InfoCard>
+              <h3>🚀 Próximas Funcionalidades</h3>
+              <ul>
                 <li>📊 Gráficos interativos com Recharts</li>
                 <li>🛒 Sistema completo de produtos</li>
                 <li>📈 Relatórios avançados em PDF</li>
                 <li>⚙️ Configurações da pizzaria</li>
                 <li>🧭 Navegação lateral completa</li>
+                <li>📱 App do cliente integrado</li>
               </ul>
-            </div>
+            </InfoCard>
+
+            <InfoCard>
+              <h3>📱 Status do Sistema</h3>
+              <ul>
+                <li>✅ Dashboard funcionando</li>
+                <li>✅ Produtos cadastrados</li>
+                <li>✅ Relatórios com gráficos</li>
+                <li>✅ Configurações implementadas</li>
+                <li>🔄 Pedidos em desenvolvimento</li>
+                <li>🔄 Deploy em preparação</li>
+              </ul>
+            </InfoCard>
           </div>
         </ContentGrid>
       </DashboardContainer>

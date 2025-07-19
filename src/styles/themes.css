@@ -1,0 +1,242 @@
+/* src/styles/themes.css */
+
+/* ===============================
+   VARIÁVEIS DE TEMA
+   =============================== */
+
+/* Tema Claro (Padrão) */
+:root,
+[data-theme="light"],
+.light {
+  /* Cores principais */
+  --color-primary: #FF6B35;
+  --color-primary-hover: #FF5722;
+  --color-secondary: #2D3748;
+  
+  /* Backgrounds */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F7FAFC;
+  --bg-tertiary: #EDF2F7;
+  --bg-hover: #F1F5F9;
+  --bg-card: #FFFFFF;
+  
+  /* Textos */
+  --text-primary: #1A202C;
+  --text-secondary: #4A5568;
+  --text-muted: #718096;
+  --text-white: #FFFFFF;
+  
+  /* Bordas */
+  --border-light: #E2E8F0;
+  --border-medium: #CBD5E0;
+  --border-dark: #A0AEC0;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  /* Status Colors */
+  --color-success: #48BB78;
+  --color-warning: #ED8936;
+  --color-error: #F56565;
+  --color-info: #4299E1;
+}
+
+/* Tema Escuro */
+[data-theme="dark"],
+.dark {
+  /* Cores principais */
+  --color-primary: #FF8A5B;
+  --color-primary-hover: #FF6B35;
+  --color-secondary: #F7FAFC;
+  
+  /* Backgrounds */
+  --bg-primary: #1A202C;
+  --bg-secondary: #2D3748;
+  --bg-tertiary: #4A5568;
+  --bg-hover: #2D3748;
+  --bg-card: #2D3748;
+  
+  /* Textos */
+  --text-primary: #F7FAFC;
+  --text-secondary: #E2E8F0;
+  --text-muted: #A0AEC0;
+  --text-white: #FFFFFF;
+  
+  /* Bordas */
+  --border-light: #4A5568;
+  --border-medium: #718096;
+  --border-dark: #A0AEC0;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  
+  /* Status Colors - Ajustados para tema escuro */
+  --color-success: #68D391;
+  --color-warning: #F6AD55;
+  --color-error: #FC8181;
+  --color-info: #63B3ED;
+}
+
+/* ===============================
+   APLICAÇÃO DOS ESTILOS
+   =============================== */
+
+/* Body e HTML */
+body {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Containers principais */
+div[style*="background: #f7fafc"],
+div[style*="background:#f7fafc"] {
+  background: var(--bg-secondary) !important;
+}
+
+div[style*="background: white"],
+div[style*="background:white"],
+div[style*="background: #FFFFFF"],
+div[style*="background:#FFFFFF"] {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Headers e Títulos */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary) !important;
+}
+
+/* Parágrafos */
+p {
+  color: var(--text-secondary) !important;
+}
+
+/* Inputs */
+input, textarea, select {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-light) !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--color-primary) !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Botões */
+button {
+  transition: all 0.2s ease;
+}
+
+/* Cards e containers com shadow */
+[style*="box-shadow"] {
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Tabelas */
+table {
+  background: var(--bg-card) !important;
+}
+
+th {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-secondary) !important;
+}
+
+td {
+  color: var(--text-primary) !important;
+  border-color: var(--border-light) !important;
+}
+
+tr:hover {
+  background: var(--bg-hover) !important;
+}
+
+/* Links */
+a {
+  color: var(--color-primary) !important;
+}
+
+/* Scrollbar para tema escuro */
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--border-dark);
+}
+
+/* Transições suaves */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ===============================
+   COMPONENTES ESPECÍFICOS
+   =============================== */
+
+/* Switch do tema escuro */
+[data-theme="dark"] .slider {
+  background-color: var(--border-light) !important;
+}
+
+[data-theme="dark"] input:checked + .slider {
+  background-color: var(--color-primary) !important;
+}
+
+/* Alertas no tema escuro */
+[data-theme="dark"] [style*="background: #c6f6d5"] {
+  background: rgba(72, 187, 120, 0.2) !important;
+  border-color: rgba(72, 187, 120, 0.4) !important;
+}
+
+[data-theme="dark"] [style*="background: #fed7d7"] {
+  background: rgba(245, 101, 101, 0.2) !important;
+  border-color: rgba(245, 101, 101, 0.4) !important;
+}
+
+[data-theme="dark"] [style*="background: #fefcbf"] {
+  background: rgba(237, 137, 54, 0.2) !important;
+  border-color: rgba(237, 137, 54, 0.4) !important;
+}
+
+/* Gráficos Recharts no tema escuro */
+[data-theme="dark"] .recharts-cartesian-grid line {
+  stroke: var(--border-light) !important;
+}
+
+[data-theme="dark"] .recharts-text {
+  fill: var(--text-secondary) !important;
+}
+
+/* Toasts no tema escuro */
+[data-theme="dark"] .toast {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-light) !important;
+}
+
+/* Override para cores inline importantes */
+[data-theme="dark"] [style*="color: #718096"] {
+  color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] [style*="color: #1a202c"] {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] [style*="color: #4a5568"] {
+  color: var(--text-secondary) !important;
+}
